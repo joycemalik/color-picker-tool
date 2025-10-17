@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Color Picker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f5f7fa;
+            color: #333;
+            overflow: hidden;
+        }
+
+        .color-picker-container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 380px;
+            max-width: 90%;
+            border: 1px solid #e0e0e0;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+
+        .slider-group {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .slider-group label {
+            width: 30px;
+            font-weight: bold;
+            font-size: 1.1em;
+            text-align: left;
+            color: #555;
+        }
+
+        .slider-group input[type="range"] {
+            flex-grow: 1;
+            margin: 0 10px;
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: #dce0e6;
+            outline: none;
+            opacity: 0.8;
+            transition: opacity .2s;
+        }
+
+        .slider-group input[type="range"]:hover {
+            opacity: 1;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #6a89cc; /* Default blue for initial styling */
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: background 0.2s;
+        }
+
+        .slider-group input[type="range"]::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #6a89cc; /* Default blue for initial styling */
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: background 0.2s;
+        }
+
+        /* Specific thumb colors */
+        #redSlider::-webkit-slider-thumb, #redSlider::-moz-range-thumb { background: #e74c3c; }
+        #greenSlider::-webkit-slider-thumb, #greenSlider::-moz-range-thumb { background: #2ecc71; }
+        #blueSlider::-webkit-slider-thumb, #blueSlider::-moz-range-thumb { background: #3498db; }
+
+        .slider-group span {
+            width: 35px;
+            text-align: right;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #444;
+        }
+
+        .color-preview {
+            width: 100%;
+            height: 120px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            margin: 30px 0;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.08);
+            transition: background-color 0.1s ease-out;
+        }
+
+        .hex-output {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #444;
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            user-select: all; /* Allow easy selection/copy */
+            font-family: 'Roboto Mono', monospace;
+            letter-spacing: 1px;
+            margin-top: 20px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="color-picker-container">
+        <h1>Color Picker</h1>
+
+        <div class="slider-group">
+            <label for="redSlider">R</label>
+            <input type="range" id="redSlider" min="0" max="255" value="0">
+            <span id="redValue">0</span>
+        </div>
+
+        <div class="slider-group">
+            <label for="greenSlider">G</label>
+            <input type="range" id="greenSlider" min="0" max="255" value="0">
+            <span id="greenValue">0</span>
+        </div>
+
+        <div class="slider-group">
+            <label for="blueSlider">B</label>
+            <input type="range" id="blueSlider" min="0" max="255" value="0">
+            <span id="blueValue">0</span>
+        </div>
+
+        <div class="color-preview" id="colorBox" style="background-color: rgb(0,0,0);"></div>
+        <div class="hex-output" id="hexOutput">#000000</div>
+    </div>
+
+    <script>
+        const redSlider = document.getElementById('redSlider');
+        const greenSlider = document.getElementById('greenSlider');
+        const blueSlider = document.getElementById('blueSlider');
+
+        const redValueSpan = document.getElementById('redValue');
+        const greenValueSpan = document.getElementById('greenValue');
+        const blueValueSpan = document.getElementById('blueValue');
+
+        const colorBox = document.getElementById('colorBox');
+        const hexOutput = document.getElementById('hexOutput');
+
+        // Converts a single RGB component (0-255) to a two-digit hex string
+        function componentToHex(c) {
+            const hex = c.toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        }
+
+        // Converts RGB values to a hexadecimal color string
+        function rgbToHex(r, g, b) {
+            return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b);
+        }
+
+        // Updates the color preview, RGB value spans, and hex output
+        function updateColor() {
+            const r = parseInt(redSlider.value);
+            const g = parseInt(greenSlider.value);
+            const b = parseInt(blueSlider.value);
+
+            redValueSpan.textContent = r;
+            greenValueSpan.textContent = g;
+            blueValueSpan.textContent = b;
+
+            const rgbString = `rgb(${r}, ${g}, ${b})`;
+            colorBox.style.backgroundColor = rgbString;
+
+            const hexString = rgbToHex(r, g, b);
+            hexOutput.textContent = hexString.toUpperCase(); // Display in uppercase
+        }
+
+        // Attach event listeners to all sliders
+        redSlider.addEventListener('input', updateColor);
+        greenSlider.addEventListener('input', updateColor);
+        blueSlider.addEventListener('input', updateColor);
+
+        // Initial update to set the color picker to its default state (black)
+        updateColor();
+    </script>
+</body>
+</html>
